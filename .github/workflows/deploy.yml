@@ -24,14 +24,16 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        working-directory: ./pagina web/my-app  
 
       - name: Build project
         run: npm run build
+        working-directory: ./pagina web/my-app 
 
       - name: Upload build artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: ./pagina web/my-app/dist
 
   deploy:
     needs: build
