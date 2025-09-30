@@ -1,4 +1,4 @@
-# tesis-pagina-web
+# Desarrollo de prototipo para medición de variables ambientales de sistemas agroindustriales y con visualización en dispositivos remotos
 Este proyecto consiste en el desarrollo de un prototipo IoT para la medición de variables ambientales en sistemas agroindustriales, orientado a apoyar prácticas de agricultura de precisión y mejorar la toma de decisiones en entornos rurales con conectividad limitada.
 El sistema está diseñado bajo una arquitectura híbrida que permite operar en dos modos:
 
