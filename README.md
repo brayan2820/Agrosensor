@@ -8,7 +8,7 @@ Modo en línea: transmisión y registro de la información en una base de datos 
 
 Además, el sistema incluye un mecanismo de gestión de memoria que alerta al usuario cuando el almacenamiento local alcanza el 80% de su capacidad, evitando la pérdida de datos críticos.
 
-Objetivos del Proyecto
+# Objetivos del Proyecto
 
 Diseñar e implementar un prototipo IoT basado en sensores (Raspberry Pi, Wasp Mote u otros) para el monitoreo ambiental.
 
@@ -18,7 +18,7 @@ Crear una interfaz web/móvil que permita la visualización remota de las variab
 
 Validar el desempeño del sistema en un entorno agroindustrial real.
 
-Tecnologías Utilizadas
+# Tecnologías Utilizadas
 
 Hardware: Raspberry Pi, sensores ambientales (temperatura, humedad, radiación solar, etc.).
 
