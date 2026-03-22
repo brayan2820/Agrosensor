@@ -15,7 +15,7 @@ SERIAL_PORT = 'COM8'
 BAUD_RATE = 115200
 
 # Configuración JSON para frontend - RUTA CORREGIDA
-JSON_FILE = r'C:\Users\scsan\Documents\UIS\2026-1\TG2\Codigos\SIGMA-251\React\my-app\public\datos_sensor.json'
+JSON_FILE = r'c:\Users\bryan\Local\SIGMA-251\React\my-app\public\datos_sensor.json'
 MAX_MEDICIONES = 100
 
 def guardar_en_json(medicion):
