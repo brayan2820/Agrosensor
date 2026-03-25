@@ -9,24 +9,27 @@ from datetime import datetime
 
 # Configuración - SUPABASE (Nube)
 # ¡IMPORTANTE! Reemplaza estas credenciales con las de tu proyecto Supabase
-SUPABASE_URL = "https://TU_PROYECTO.supabase.co" 
-SUPABASE_KEY = "TU_API_KEY_ANON_PUBLIC" # La key larga que empieza por eyJ...
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://vqzefjknwztxmsdxhlfn.supabase.co")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxemVmamtud3p0eG1zZHhobGZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTY0MzYsImV4cCI6MjA4OTczMjQzNn0.Y4lY7tsrdO61x3HPSjLrdhv4-n6j3TuFAR5vnCh1fHQ")
 
 # Endpoints de la API REST de Supabase
 MEDICIONES_URL = f'{SUPABASE_URL}/rest/v1/mediciones'
+ESTADO_URL = f'{SUPABASE_URL}/rest/v1/estado_sistema'
 
 SERIAL_PORT = 'COM8'
 BAUD_RATE = 115200
 
-# Configuración JSON para frontend - RUTA CORREGIDA
-JSON_FILE = r'C:\Users\bryan\OneDrive\Documents\SIGMA-251\React\my-app\public\datos_sensor.json'
+# Configuración JSON local (opcional, para backup)
+JSON_FILE = 'datos_sensor_local.json'
 MAX_MEDICIONES = 100
 
 def guardar_en_json(medicion):
     """Guarda la medición en un archivo JSON para el frontend - VERSIÓN CORREGIDA"""
     try:
         # Crear directorio si no existe
-        os.makedirs(os.path.dirname(JSON_FILE), exist_ok=True)
+        dirname = os.path.dirname(JSON_FILE)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
         
         # Si el archivo no existe, crearlo con array vacío
         if not os.path.exists(JSON_FILE):
@@ -182,11 +185,26 @@ def send_to_api(sensor_data):
             print(f"❌ Error Supabase: {response.status_code} - {response.text}")
             return False
         
+        # Enviar batería a la tabla de estado (si el dato existe)
+        if sensor_data.get('bateria') is not None:
+            payload_estado = {
+                "dispositivo_id": 1,
+                "bateria": sensor_data['bateria'],
+                "estado_conexion": True
+            }
+            res_estado = requests.post(ESTADO_URL, json=payload_estado, headers=headers, timeout=5)
+            if res_estado.status_code in [200, 201, 204]:
+                print(f"🔋 Batería sincronizada: {sensor_data['bateria']}%")
+        
         return True
             
     except Exception as e:
         print(f"🌐 Error de conexión a Internet: {e}")
-        print("💾 Guardando backup en archivo de texto...")
+        # Guardamos en JSON local solo si falla el internet
+        try:
+            guardar_en_json(sensor_data)
+        except:
+            pass
         with open("sensor_backup.txt", "a") as f:
             f.write(f"{datetime.now()}: {sensor_data}\n")
         return False

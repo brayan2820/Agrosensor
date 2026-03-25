@@ -102,14 +102,14 @@ export const api = {
   // ===== DATOS DE SENSORES =====
   getLatestMeasurements: async () => {
     // Obtener la última medición de cada tipo de sensor
-    // Hacemos 4 consultas rápidas (una por sensor) para obtener lo último
+    // Optimizamos para la nube: Buscamos en la tabla de mediciones lo más reciente
     const latestData = {};
     
     for (const [id, name] of Object.entries(SENSOR_NAMES)) {
       const { data, error } = await supabase
         .from('mediciones')
         .select('*')
-        .eq('sensor_id', id)
+        .eq('sensor_id', parseInt(id))
         .order('created_at', { ascending: false }) // En SQL usamos created_at en vez de timestamp usualmente
         .limit(1);
 
