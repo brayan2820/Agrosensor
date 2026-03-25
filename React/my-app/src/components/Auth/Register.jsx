@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../../services/api.jsx';
+import { supabase } from '../../services/supabaseClient';
 import '../../styles/Auth.css';
 
 function Register() {
@@ -74,38 +75,27 @@ function Register() {
     setError('');
 
     try {
-      // Preparar datos para registro
-      const userData = {
-        username: formData.username,
-        password: formData.password,
-        confirm_password: formData.confirmPassword,
-        email: formData.email || `${formData.username}@sigma.com` // Email por defecto
-      };
+      // Preparar email (Supabase requiere email)
+      const emailFinal = formData.email || `${formData.username.toLowerCase().replace(/\s+/g, '')}@sigma.com`;
 
-      // Llamar al endpoint de registro
-      const response = await fetch('http://localhost:8000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
+      // Registro directo en Supabase
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: emailFinal,
+        password: formData.password,
+        options: {
+          data: {
+            username: formData.username,
+            rol: 'operador' // Rol por defecto
+          }
+        }
       });
 
-      const data = await response.json();
+      if (signUpError) {
+        throw new Error(signUpError.message);
+      }
 
-      if (!response.ok) {
-        // Si data.detail es un objeto, conviértelo a string
-        let errorMessage = 'Error en el registro';
-        if (data.detail) {
-          if (typeof data.detail === 'object') {
-           errorMessage = JSON.stringify(data.detail);
-          } else {
-            errorMessage = data.detail;
-          }
-        } else if (data.message) {
-          errorMessage = data.message;
-        }
-        throw new Error(errorMessage);
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        throw new Error('Este usuario/email ya está registrado.');
       }
 
       // Éxito
@@ -141,8 +131,8 @@ function Register() {
           <div className="success-message">
             <div className="success-icon">✅</div>
             <h3>Bienvenido a SIGMA</h3>
-            <p>Tu cuenta ha sido creada como <strong>Operador</strong>.</p>
-            <p>Serás redirigido a la página de inicio de sesión en 3 segundos...</p>
+            <p>Cuenta creada exitosamente.</p>
+            <p>Si usaste un correo real, verifica tu bandeja de entrada.</p>
             
             <div className="success-actions">
               <Link to="/login" className="btn btn-primary">
