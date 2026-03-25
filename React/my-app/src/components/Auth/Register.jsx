@@ -1,5 +1,5 @@
 // src/components/Auth/Register.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../../services/api.jsx';
 import { supabase } from '../../services/supabaseClient';
@@ -17,6 +17,17 @@ function Register() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  // Verificar si volvemos de Google
+  useEffect(() => {
+    const checkGoogleLogin = async () => {
+      const session = await api.syncSession();
+      if (session) {
+        navigate('/');
+      }
+    };
+    checkGoogleLogin();
+  }, [navigate]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -115,6 +126,17 @@ function Register() {
     } catch (err) {
       setError(err.message || 'Error en el registro');
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      await api.loginWithGoogle();
+      // La redirección ocurre externamente
+    } catch (err) {
+      setError(err.message);
       setLoading(false);
     }
   };
@@ -245,6 +267,15 @@ function Register() {
             disabled={loading}
           >
             {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
+          </button>
+
+          <button 
+            type="button" 
+            onClick={handleGoogleLogin}
+            className="login-button"
+            style={{ marginTop: '10px', backgroundColor: '#DB4437', borderColor: '#DB4437' }}
+          >
+            G Registrarse con Google
           </button>
 
           <div className="register-section">

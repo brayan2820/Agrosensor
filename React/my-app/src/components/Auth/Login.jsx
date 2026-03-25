@@ -1,5 +1,5 @@
 // src/components/Auth/Login.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../../services/api.jsx';
 import '../../styles/Auth.css';
@@ -10,6 +10,17 @@ function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Verificar si volvemos de un inicio de sesión con Google
+  useEffect(() => {
+    const checkGoogleLogin = async () => {
+      const session = await api.syncSession();
+      if (session) {
+        navigate('/');
+      }
+    };
+    checkGoogleLogin();
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,6 +40,17 @@ function Login() {
       console.log('Login error:', err);
       setError(err.message || 'Error de conexión');
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      await api.loginWithGoogle();
+      // La redirección ocurre externamente
+    } catch (err) {
+      setError(err.message);
       setLoading(false);
     }
   };
@@ -88,6 +110,15 @@ function Login() {
             disabled={loading}
           >
             {loading ? 'Cargando...' : 'Iniciar Sesión'}
+          </button>
+
+          <button 
+            type="button" 
+            onClick={handleGoogleLogin}
+            className="login-button"
+            style={{ marginTop: '10px', backgroundColor: '#DB4437', borderColor: '#DB4437' }}
+          >
+            G Continuar con Google
           </button>
 
           <div className="register-section">

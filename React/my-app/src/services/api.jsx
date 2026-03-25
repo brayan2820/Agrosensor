@@ -20,6 +20,8 @@ export const api = {
     if (!username.includes('@')) {
       emailToUse = `${username.toLowerCase().replace(/\s+/g, '')}@sigma.com`;
     }
+    
+    console.log(`🔍 Intento de Login: "${username}" convertido a email -> "${emailToUse}"`);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email: emailToUse,
@@ -55,6 +57,31 @@ export const api = {
     return data;
   },
   
+  loginWithGoogle: async () => {
+    // Redirigir a la misma ubicación actual tras la autenticación
+    const redirectUrl = window.location.origin + import.meta.env.BASE_URL;
+    
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl
+      }
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  // Detectar sesión activa (útil cuando vuelven de Google)
+  syncSession: async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      localStorage.setItem('token', session.access_token);
+      localStorage.setItem('user', JSON.stringify(session.user));
+      return session;
+    }
+    return null;
+  },
+
   logout: async () => {
     await supabase.auth.signOut();
     localStorage.removeItem('token');
