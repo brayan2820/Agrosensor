@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { supabase } from '../../services/supabaseClient';
+import { supabase } from './supabaseClient';
 
 const WaspmoteReader = () => {
   const [port, setPort] = useState(null);
@@ -73,6 +73,15 @@ const WaspmoteReader = () => {
         ]);
 
       if (errorMediciones) throw errorMediciones;
+
+      // 2. Insertar Batería (si la tabla existe)
+      /* 
+         Descomenta si tienes la tabla 'estado_sistema' o similar en Supabase
+         const { error: errorBat } = await supabase
+           .from('estado_sistema')
+           .insert([{ dispositivo_id: 1, bateria: sensorData.bateria }]);
+         if (errorBat) throw errorBat;
+      */
 
       addLog(`☁️ Supabase: T:${sensorData.temperatura}° H:${sensorData.humedad}%`);
     } catch (err) {
