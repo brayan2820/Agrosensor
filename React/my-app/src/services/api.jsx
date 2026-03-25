@@ -12,9 +12,17 @@ const SENSOR_NAMES = {
 export const api = {
   // ===== AUTENTICACIÓN =====
   login: async (username, password) => {
-    // Supabase usa email, asumimos que username es el email
+    // Determinar si es un email real o un nombre de usuario
+    let emailToUse = username;
+
+    // Si NO tiene arroba (@), asumimos que es un nombre de usuario
+    // y reconstruimos el email falso que se generó en el Registro.
+    if (!username.includes('@')) {
+      emailToUse = `${username.toLowerCase().replace(/\s+/g, '')}@sigma.com`;
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: username,
+      email: emailToUse,
       password: password,
     });
 
