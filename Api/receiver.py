@@ -7,10 +7,13 @@ import json
 import os
 from datetime import datetime
 
-# Configuración - NUEVOS ENDPOINTS
-API_BASE_URL = 'http://localhost:8000'
-MEDICIONES_URL = f'{API_BASE_URL}/api/mediciones/waspmote'
-ESTADO_URL = f'{API_BASE_URL}/api/estado-sistema/waspmote'
+# Configuración - SUPABASE (Nube)
+# ¡IMPORTANTE! Reemplaza estas credenciales con las de tu proyecto Supabase
+SUPABASE_URL = "https://TU_PROYECTO.supabase.co" 
+SUPABASE_KEY = "TU_API_KEY_ANON_PUBLIC" # La key larga que empieza por eyJ...
+
+# Endpoints de la API REST de Supabase
+MEDICIONES_URL = f'{SUPABASE_URL}/rest/v1/mediciones'
 
 SERIAL_PORT = 'COM8'
 BAUD_RATE = 115200
@@ -148,56 +151,41 @@ def clean_sensor_data(raw_string):
         return None
 
 def send_to_api(sensor_data):
-    """Enviar datos a la API - ESTRUCTURA CORREGIDA"""
+    """Enviar datos DIRECTO A SUPABASE (Nube)"""
     try:
         # SIEMPRE guardar en JSON (para offline)
         guardar_en_json(sensor_data)
         
-        # Enviar mediciones de sensores
-        mediciones_data = {
-            'temperatura': sensor_data['temperatura'],
-            'humedad': sensor_data['humedad'], 
-            'luminosidad': sensor_data['luminosidad'],
-            'humedad_suelo': sensor_data['humedad_suelo']
+        # Preparar headers para Supabase
+        headers = {
+            "apikey": SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
         }
         
-        print(f"📤 Enviando mediciones a API: {mediciones_data}")
-        response_mediciones = requests.post(
-            'http://localhost:8000/api/mediciones/waspmote',  # URL directa
-            json=mediciones_data, 
-            timeout=5
-        )
+        # Supabase espera un array de objetos (uno por cada sensor)
+        # Mapeo: 1=Temp, 2=Hum, 3=Luz, 4=Suelo
+        payload_mediciones = [
+            {"sensor_id": 1, "valor": sensor_data['temperatura'], "calidad": "buena"},
+            {"sensor_id": 2, "valor": sensor_data['humedad'], "calidad": "buena"},
+            {"sensor_id": 3, "valor": sensor_data['luminosidad'], "calidad": "buena"},
+            {"sensor_id": 4, "valor": sensor_data['humedad_suelo'], "calidad": "buena"}
+        ]
         
-        if response_mediciones.status_code == 200:
-            print("✅ Mediciones enviadas exitosamente")
+        print(f"☁️ Enviando a Nube (Supabase)...")
+        response = requests.post(MEDICIONES_URL, json=payload_mediciones, headers=headers, timeout=5)
+        
+        if response.status_code in [200, 201, 204]:
+            print("✅ Datos guardados en la nube exitosamente")
         else:
-            print(f"❌ Error enviando mediciones: {response_mediciones.text}")
+            print(f"❌ Error Supabase: {response.status_code} - {response.text}")
             return False
-        
-        # Enviar estado de batería si está disponible
-        if sensor_data.get('bateria') is not None:
-            estado_data = {
-                'dispositivo_id': 1,  # Waspmote principal
-                'bateria': sensor_data['bateria']
-            }
-            
-            print(f"🔋 Enviando estado de batería: {sensor_data['bateria']}%")
-            response_estado = requests.post(
-                'http://localhost:8000/api/estado-sistema/waspmote',  # URL directa
-                json=estado_data,
-                timeout=5
-            )
-            
-            if response_estado.status_code == 200:
-                print("✅ Estado de batería enviado exitosamente")
-            else:
-                print(f"⚠️ Error enviando batería: {response_estado.text}")
         
         return True
             
     except Exception as e:
-        print(f"🌐 Error de conexión: {e}")
-        # Aunque falle API, el JSON ya se guardó
+        print(f"🌐 Error de conexión a Internet: {e}")
         print("💾 Guardando backup en archivo de texto...")
         with open("sensor_backup.txt", "a") as f:
             f.write(f"{datetime.now()}: {sensor_data}\n")

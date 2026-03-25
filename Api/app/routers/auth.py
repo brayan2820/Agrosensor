@@ -67,19 +67,32 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 def login(login_data: UserLogin, db: Session = Depends(get_db)):
     """Iniciar sesión"""
     
-    # Testing endpoint
-    return {
-        "access_token": "test_token_123",
-        "token_type": "bearer",
-        "user": {
-            "id": 1,
-            "username": "test",
-            "email": "test@test.com",
-            "rol": "admin",
-            "activo": True,
-            "fecha_creacion": "2025-03-07T12:00:00"
-        }
-    }
+    # Buscar usuario por username
+    user = db.query(Usuario).filter(Usuario.username == login_data.username).first()
+    
+    # Validar usuario y contraseña
+    if not user or not verify_password(login_data.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales incorrectas (Usuario o contraseña inválidos)"
+        )
+
+    if not user.activo:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuario desactivado"
+        )
+    
+    # Crear token JWT real
+    access_token = create_access_token(
+        data={"user_id": user.id, "username": user.username, "rol": user.rol}
+    )
+    
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserResponse.from_orm(user)
+    )
 
 @router.get("/me", response_model=UserResponse)
 def get_current_user(

@@ -9,19 +9,21 @@ const SENSOR_NAMES = {
   4: 'humedad_suelo'
 };
 
+// Ya no usamos API Local para autenticación si queremos todo en la nube
+// const API_URL = 'http://localhost:8000';
+
 export const api = {
   // ===== AUTENTICACIÓN =====
   login: async (username, password) => {
-    // Determinar si es un email real o un nombre de usuario
+    // 1. Truco para "Usuario sin correo":
+    // Si el usuario escribe "juan", nosotros enviamos "juan@sigma.com" a Supabase.
     let emailToUse = username;
-
-    // Si NO tiene arroba (@), asumimos que es un nombre de usuario
-    // y reconstruimos el email falso que se generó en el Registro.
     if (!username.includes('@')) {
+      // Limpiamos espacios y convertimos a minúsculas para evitar errores
       emailToUse = `${username.toLowerCase().replace(/\s+/g, '')}@sigma.com`;
     }
-    
-    console.log(`🔍 Intento de Login: "${username}" convertido a email -> "${emailToUse}"`);
+
+    console.log(`☁️ Login en Nube: "${username}" -> "${emailToUse}"`);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email: emailToUse,
@@ -29,15 +31,23 @@ export const api = {
     });
 
     if (error) {
-      const err = new Error(error.message);
-      err.response = { data: { detail: error.message } };
-      throw err;
+      console.error("Error Login Supabase:", error);
+      throw new Error("Usuario o contraseña incorrectos");
     }
 
-    // Guardar sesión compatible con lógica anterior
+    // Guardar sesión localmente para que la app sepa que estamos dentro
     localStorage.setItem('token', data.session.access_token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    return { access_token: data.session.access_token, user: data.user };
+    
+    // Guardamos datos básicos del usuario
+    const userForApp = {
+      id: data.user.id,
+      username: data.user.user_metadata?.username || username,
+      email: data.user.email,
+      rol: data.user.user_metadata?.rol || 'operador'
+    };
+    localStorage.setItem('user', JSON.stringify(userForApp));
+
+    return { access_token: data.session.access_token, user: userForApp };
   },
   
   getCurrentUser: async () => {
@@ -155,12 +165,21 @@ export const api = {
   
   // ===== VERIFICAR SI ESTÁ AUTENTICADO =====
   isAuthenticated: () => {
-    // Verificación simple local, idealmente verificar con supabase.auth.getSession()
+    // Verificación simple local
     return !!localStorage.getItem('token'); 
   },
   
   getToken: () => {
     return localStorage.getItem('token');
+  },
+
+  // Helper para headers con token
+  getAuthHeaders: () => {
+    const token = localStorage.getItem('token');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    };
   },
   
   getUser: () => {
@@ -168,20 +187,26 @@ export const api = {
     return userStr ? JSON.parse(userStr) : null;
   },
 
-  // ===== ADMINISTRACIÓN DE USUARIOS (Opcional/Simplificado) =====
-  // Supabase maneja usuarios en su panel, estas funciones son wrappers simples
+  // ===== ADMINISTRACIÓN DE USUARIOS (Conectado a Python Backend) =====
+  // NOTA: La gestión de usuarios admin directa requiere backend o funciones cloud.
+  // Por ahora, devolvemos una lista vacía para que no se rompa el panel.
   getUsers: async () => {
-    return []; // No implementado en cliente público por seguridad
+    console.warn("La gestión de usuarios requiere acceso administrativo en Supabase");
+    return []; 
   },
   
   createUser: async (userData) => {
-    // Solo admins pueden crear usuarios via API admin, o usar signUp público
-    return supabase.auth.signUp({
-      email: userData.email,
-      password: userData.password
-    });
+    // Para crear usuarios, mejor usar el Registro público o el panel de Supabase
+    throw new Error("Usa la página de Registro para crear cuentas nuevas.");
   },
   
-  updateUser: async () => {},
-  deleteUser: async () => {},
+  updateUser: async (id, userData) => {
+    // Simulado
+    return userData;
+  },
+
+  deleteUser: async (id) => {
+    // Simulado
+    return { message: "Usuario desactivado" };
+  },
 };
