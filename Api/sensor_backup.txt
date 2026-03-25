@@ -1,0 +1,5 @@
+2026-02-10 01:50:47.303519: {'temperatura': 26.49, 'humedad': 71.06, 'luminosidad': 40.32, 'humedad_suelo': 98.1, 'bateria': 25.0}
+2026-02-10 01:51:31.354729: {'temperatura': 26.49, 'humedad': 71.03, 'luminosidad': 33.87, 'humedad_suelo': 98.1, 'bateria': 25.0}
+2026-02-16 02:13:48.969616: {'temperatura': 26.91, 'humedad': 67.9, 'luminosidad': 33.23, 'humedad_suelo': 98.8, 'bateria': 35.0}
+2026-02-16 02:18:24.688421: {'temperatura': 26.95, 'humedad': 67.66, 'luminosidad': 40.65, 'humedad_suelo': 98.4, 'bateria': 34.0}
+2026-02-16 02:23:53.409330: {'temperatura': 26.89, 'humedad': 67.72, 'luminosidad': 36.45, 'humedad_suelo': 98.4, 'bateria': 33.0}

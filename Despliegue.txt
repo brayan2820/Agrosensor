@@ -1,0 +1,26 @@
+fasAPI : 
+	env\Scripts\activate
+	uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+
+React : npm install
+	npm run build
+
+
+
+SIGMA_API: .\deploy_lan.ps1
+
+
+cd sigma_api
+
+# 1. Crear entorno virtual
+python -m venv venv
+
+# 2. Activar entorno virtual
+venv\Scripts\activate      # Windows
+# source venv/bin/activate  # Linux/Mac
+
+# 3. Instalar dependencias (AHORA SÍ)
+pip install -r requirements.txt
+
+

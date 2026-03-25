@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  # Servicio del Backend (FastAPI)
+  api:
+    build: ./Api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mapeamos la carpeta local para que la base de datos sea persistente y visible en Windows
+      - ./Api:/app
+    environment:
+      - DATABASE_URL=sqlite:///./sigma.db
+    restart: always
+
+  # Servicio del Frontend (React + Nginx)
+  frontend:
+    build: ./React/my-app
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    restart: always
