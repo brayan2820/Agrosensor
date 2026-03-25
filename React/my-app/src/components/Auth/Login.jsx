@@ -41,7 +41,7 @@ function Login() {
         <div className="login-header">
           <div className="logo-login">
             <img
-            src="/logo.png"
+            src={`${import.meta.env.BASE_URL}logo.png`}
             alt="SIGMA Logo"
             className="logo-image-login"
             />
