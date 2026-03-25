@@ -60,6 +60,7 @@ export const api = {
   loginWithGoogle: async () => {
     // Redirigir a la misma ubicación actual tras la autenticación
     const redirectUrl = window.location.origin + import.meta.env.BASE_URL;
+    console.log("🔗 Redirigiendo a:", redirectUrl);
     
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
