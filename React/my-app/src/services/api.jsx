@@ -14,6 +14,13 @@ const SENSOR_NAMES = {
 
 export const api = {
   // ===== AUTENTICACIÓN =====
+  // Helper para obtener la ruta correcta de assets (logos/imágenes) en GitHub Pages
+  getAssetPath: (path) => {
+    const base = import.meta.env.BASE_URL || '/';
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    return `${base}${cleanPath}`;
+  },
+
   login: async (username, password) => {
     // 1. Truco para "Usuario sin correo":
     // Si el usuario escribe "juan", nosotros enviamos "juan@sigma.com" a Supabase.

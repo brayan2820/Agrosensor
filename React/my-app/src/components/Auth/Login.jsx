@@ -28,11 +28,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await api.login(username, password);
-      
-      // Guardar token y datos de usuario
-      localStorage.setItem('token', response.access_token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      await api.login(username, password);
       
       // Redirigir al dashboard
       navigate('/');
@@ -63,7 +59,7 @@ function Login() {
         <div className="login-header">
           <div className="logo-login">
             <img
-            src={`${import.meta.env.BASE_URL}logo.png`}
+            src={api.getAssetPath('logo.png')}
             alt="SIGMA Logo"
             className="logo-image-login"
             />
