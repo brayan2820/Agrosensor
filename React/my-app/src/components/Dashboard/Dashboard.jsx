@@ -2,6 +2,7 @@ import MainLayout from '../Layout/MainLayout.jsx';
 import MetricCard from './MetricCard.jsx';
 import StatusSidebar from '../Layout/StatusSidebar.jsx';
 import RealTimeChart from './RealTimeChart.jsx';
+import SerialConnectButton from './SerialConnectButton'; // Corregido: ya está en la misma carpeta
 import useSensorData from '../../hooks/useSensorData.jsx';
 import { api } from '../../services/api.jsx';
 import '../../styles/index.css';
@@ -64,25 +65,32 @@ function Dashboard() {
         <div className="dashboard-main">
           <div className="dashboard-header">
             <h2>Panel de Monitoreo en Tiempo Real</h2>
-            <div className="time-range-selector">
-              <button 
-                className={timeRange === 1 ? 'active' : ''} 
-                onClick={() => changeTimeRange(1)}
-              >
-                1H
-              </button>
-              <button 
-                className={timeRange === 24 ? 'active' : ''} 
-                onClick={() => changeTimeRange(24)}
-              >
-                24H
-              </button>
-              <button 
-                className={timeRange === 168 ? 'active' : ''} 
-                onClick={() => changeTimeRange(168)}
-              >
-                7D
-              </button>
+            
+            {/* Contenedor de acciones del header */}
+            <div className="header-actions" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              {/* Botón de conexión Serial incorporado */}
+              <SerialConnectButton onData={(data) => console.log("Datos recibidos:", data)} />
+
+              <div className="time-range-selector">
+                <button 
+                  className={timeRange === 1 ? 'active' : ''} 
+                  onClick={() => changeTimeRange(1)}
+                >
+                  1H
+                </button>
+                <button 
+                  className={timeRange === 24 ? 'active' : ''} 
+                  onClick={() => changeTimeRange(24)}
+                >
+                  24H
+                </button>
+                <button 
+                  className={timeRange === 168 ? 'active' : ''} 
+                  onClick={() => changeTimeRange(168)}
+                >
+                  7D
+                </button>
+              </div>
             </div>
           </div>
           

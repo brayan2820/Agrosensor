@@ -9,14 +9,17 @@ const SENSOR_NAMES = {
   4: 'humedad_suelo'
 };
 
-// Ya no usamos API Local para autenticación si queremos todo en la nube
-// const API_URL = 'http://localhost:8000';
-
 export const api = {
   // ===== AUTENTICACIÓN =====
   // Helper para obtener la ruta correcta de assets (logos/imágenes) en GitHub Pages
   getAssetPath: (path) => {
-    const base = import.meta.env.BASE_URL || '/';
+    // Vite ya proporciona BASE_URL con barras al inicio y final (ej: /Agrosensor/)
+    let base = import.meta.env.BASE_URL;
+    
+    // Asegurar que la base termine en /
+    if (!base.endsWith('/')) base += '/';
+    
+    // Eliminar barra inicial del path para evitar dobles barras //
     const cleanPath = path.startsWith('/') ? path.substring(1) : path;
     return `${base}${cleanPath}`;
   },
@@ -216,4 +219,109 @@ export const api = {
     // Simulado
     return { message: "Usuario desactivado" };
   },
+
+  // ===== WEB SERIAL API (Lectura de puerto desde el navegador) =====
+  
+  /**
+   * Inicia la conexión con el puerto serial y procesa los datos
+   * @param {Function} onDataReceived Callback para actualizar el UI en tiempo real
+   */
+  connectSerial: async (onDataReceived) => {
+    if (!("serial" in navigator)) {
+      throw new Error("Tu navegador no soporta la Web Serial API. Usa Chrome o Edge.");
+    }
+
+    try {
+      // Solicitar permiso al usuario para acceder al puerto
+      const port = await navigator.serial.requestPort();
+      await port.open({ baudRate: 115200 });
+
+      const decoder = new TextDecoderStream();
+      const inputDone = port.readable.pipeTo(decoder.writable);
+      const inputStream = decoder.readable;
+      const reader = inputStream.getReader();
+
+      console.log("🔌 Puerto Serial conectado con éxito");
+
+      let buffer = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
+          reader.releaseLock();
+          break;
+        }
+        
+        buffer += value;
+        
+        // Procesar líneas completas
+        if (buffer.includes('\n')) {
+          const lines = buffer.split('\n');
+          buffer = lines.pop(); // Mantener el fragmento incompleto
+          
+          for (const line of lines) {
+            const cleanLine = line.trim();
+            if (cleanLine) {
+              const data = api.parseWaspmoteData(cleanLine);
+              if (data) {
+                console.log("📡 Datos procesados:", data);
+                await api.syncMedicionesToCloud(data);
+                if (onDataReceived) onDataReceived(data);
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("❌ Error en Serial:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Parsea la cadena T:xx,H:xx... y calcula porcentajes
+   */
+  parseWaspmoteData: (rawString) => {
+    const pattern = /T:\s*([\d.-]+),\s*H:\s*([\d.-]+),\s*L:\s*([\d.-]+),\s*W:\s*([\d.-]+),\s*B:\s*([\d.-]+)/;
+    const match = rawString.match(pattern);
+
+    if (match) {
+      const watermark_hz = parseFloat(match[4]);
+      // Lógica de conversión de Hz a Porcentaje (escala inversa)
+      const hz = Math.max(50, Math.min(10000, watermark_hz));
+      const humedad_suelo = 100.0 - ((hz - 50) / 99.5) * 100.0;
+
+      return {
+        temperatura: parseFloat(match[1]),
+        humedad: parseFloat(match[2]),
+        luminosidad: parseFloat(match[3]),
+        humedad_suelo: Math.round(humedad_suelo * 10) / 10,
+        bateria: parseFloat(match[5])
+      };
+    }
+    return null;
+  },
+
+  /**
+   * Sincroniza los datos directamente con Supabase (Nube)
+   */
+  syncMedicionesToCloud: async (sensorData) => {
+    const mediciones = [
+      { sensor_id: 1, valor: sensorData.temperatura, calidad: 'buena' },
+      { sensor_id: 2, valor: sensorData.humedad, calidad: 'buena' },
+      { sensor_id: 3, valor: sensorData.luminosidad, calidad: 'buena' },
+      { sensor_id: 4, valor: sensorData.humedad_suelo, calidad: 'buena' }
+    ];
+
+    const { error } = await supabase.from('mediciones').insert(mediciones);
+    
+    if (sensorData.bateria) {
+      await supabase.from('estado_sistema').insert([{
+        dispositivo_id: 1,
+        bateria: sensorData.bateria,
+        estado_conexion: true
+      }]);
+    }
+
+    if (error) console.error("❌ Error sincronizando a Supabase:", error);
+  }
 };

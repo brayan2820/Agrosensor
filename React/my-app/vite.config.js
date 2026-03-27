@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import react from '@vitejs/plugin-react-swc';
 
 // Reemplaza 'nombre-de-tu-repositorio' con el nombre real de tu repositorio en GitHub
 const repoName = 'Agrosensor'; 

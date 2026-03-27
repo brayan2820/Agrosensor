@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Auth/Login.jsx';
-import Register from './components/Auth/Register.jsx'; // NUEVO
+import Register from './components/Auth/Register.jsx';
 import Dashboard from './components/Dashboard/Dashboard.jsx';
 import UserManagement from './components/Admin/UserManagement.jsx';
 import Settings from './components/Settings/Settings.jsx';
@@ -16,18 +16,18 @@ const PrivateRoute = ({ children }) => {
 const AdminRoute = ({ children }) => {
   const user = api.getUser();
   const isAdmin = user?.rol === 'admin';
-  
   return api.isAuthenticated() && isAdmin ? children : <Navigate to="/" />;
 };
 
-// Componente para rutas públicas (solo si NO está autenticado)
+// Componente para rutas públicas
 const PublicRoute = ({ children }) => {
   return !api.isAuthenticated() ? children : <Navigate to="/" />;
 };
 
 function App() {
   return (
-    <Router>
+    /* He añadido el basename="/Agrosensor" aquí abajo */
+    <Router basename="/Agrosensor">
       <Routes>
         {/* Ruta pública: Login */}
         <Route 
@@ -59,7 +59,7 @@ function App() {
           } 
         />
         
-        {/* Ruta protegida solo para admin: Administración de Usuarios */}
+        {/* Ruta protegida solo para admin */}
         <Route 
           path="/admin/users" 
           element={
@@ -69,7 +69,7 @@ function App() {
           } 
         />
 
-        // Y añade esta ruta dentro del Router:
+        {/* Ruta protegida: Ajustes */}
         <Route 
           path="/settings" 
           element={

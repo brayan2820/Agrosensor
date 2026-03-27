@@ -175,8 +175,17 @@ function Register() {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <h1>Crear Cuenta</h1>
-          <p>Registro en SIGMA - Sistema de Monitoreo Ambiental</p>
+          <div className="logo-login">
+            <img
+              src={api.getAssetPath('/logo.png')}
+              alt="SIGMA Logo"
+              className="logo-image-login"
+            />
+            <div className="logo-text-login">
+              <h1>SIGMA</h1>
+              <p>Sistema de Gestión de Monitoreo Ambiental</p>
+            </div>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">

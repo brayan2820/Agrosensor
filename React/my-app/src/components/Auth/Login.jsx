@@ -59,7 +59,7 @@ function Login() {
         <div className="login-header">
           <div className="logo-login">
             <img
-            src={api.getAssetPath('logo.png')}
+            src={api.getAssetPath('/logo.png')}
             alt="SIGMA Logo"
             className="logo-image-login"
             />
