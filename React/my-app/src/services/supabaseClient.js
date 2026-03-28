@@ -8,4 +8,15 @@ if (!supabaseUrl || !supabaseKey) {
   console.error("⚠️ ERROR: Faltan las credenciales de Supabase en el archivo .env o en GitHub Secrets.");
 }
 
-export const supabase = createClient(supabaseUrl || 'https://falta-url.supabase.co', supabaseKey || 'falta-key');
+export const supabase = createClient(
+  supabaseUrl || 'https://falta-url.supabase.co', 
+  supabaseKey || 'falta-key',
+  {
+    auth: {
+      storage: window.sessionStorage, // Forzar persistencia solo por pestaña/sesión
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    }
+  }
+);

@@ -45,8 +45,8 @@ export const api = {
       throw new Error("Usuario o contraseña incorrectos");
     }
 
-    // Guardar sesión localmente para que la app sepa que estamos dentro
-    localStorage.setItem('token', data.session.access_token);
+    // Guardar sesión en sessionStorage (se borra al cerrar la pestaña)
+    sessionStorage.setItem('token', data.session.access_token);
     
     // Guardamos datos básicos del usuario
     const userForApp = {
@@ -55,7 +55,7 @@ export const api = {
       email: data.user.email,
       rol: data.user.user_metadata?.rol || 'operador'
     };
-    localStorage.setItem('user', JSON.stringify(userForApp));
+    sessionStorage.setItem('user', JSON.stringify(userForApp));
 
     return { access_token: data.session.access_token, user: userForApp };
   },
@@ -96,8 +96,8 @@ export const api = {
   syncSession: async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      localStorage.setItem('token', session.access_token);
-      localStorage.setItem('user', JSON.stringify(session.user));
+      sessionStorage.setItem('token', session.access_token);
+      sessionStorage.setItem('user', JSON.stringify(session.user));
       return session;
     }
     return null;
@@ -105,8 +105,8 @@ export const api = {
 
   logout: async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
   },
   
   // ===== DATOS DE SENSORES =====
@@ -175,17 +175,17 @@ export const api = {
   
   // ===== VERIFICAR SI ESTÁ AUTENTICADO =====
   isAuthenticated: () => {
-    // Verificación simple local
-    return !!localStorage.getItem('token'); 
+    // Verificación en el almacenamiento de sesión
+    return !!sessionStorage.getItem('token'); 
   },
   
   getToken: () => {
-    return localStorage.getItem('token');
+    return sessionStorage.getItem('token');
   },
 
   // Helper para headers con token
   getAuthHeaders: () => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     return {
       'Content-Type': 'application/json',
       'Authorization': token ? `Bearer ${token}` : ''
@@ -193,7 +193,7 @@ export const api = {
   },
   
   getUser: () => {
-    const userStr = localStorage.getItem('user');
+    const userStr = sessionStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
   },
 
